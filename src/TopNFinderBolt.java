@@ -14,7 +14,7 @@ public class TopNFinderBolt extends BaseBasicBolt {
   private HashMap<String, Integer> currentTopWords = new HashMap<String, Integer>();
   private int N;
 
-  private long intervalToReport = 20;
+  private final long intervalToReport = 20;
   private long lastReportTime = System.currentTimeMillis();
 
   public TopNFinderBolt(int N) {
@@ -23,13 +23,9 @@ public class TopNFinderBolt extends BaseBasicBolt {
 
   @Override
   public void execute(Tuple tuple, BasicOutputCollector collector) {
- /*
-    ----------------------TODO-----------------------
-    Task: keep track of the top N words
-
-
-    ------------------------------------------------- */
-
+      final String word = tuple.getString(0);
+      final int count = tuple.getInteger(1);
+      currentTopWords.put(word, count);
 
     //reports the top N words periodically
     if (System.currentTimeMillis() - lastReportTime >= intervalToReport) {
@@ -40,9 +36,7 @@ public class TopNFinderBolt extends BaseBasicBolt {
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer declarer) {
-
      declarer.declare(new Fields("top-N"));
-
   }
 
   public String printMap() {

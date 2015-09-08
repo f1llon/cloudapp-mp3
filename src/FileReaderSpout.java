@@ -3,6 +3,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import backtype.storm.spout.SpoutOutputCollector;
@@ -11,39 +16,47 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 
 public class FileReaderSpout implements IRichSpout {
   private SpoutOutputCollector _collector;
   private TopologyContext context;
+  private final String filename;
+  private BufferedReader reader;
+
+  public FileReaderSpout(String filename) {
+    this.filename = filename;
+  }
 
 
   @Override
   public void open(Map conf, TopologyContext context,
                    SpoutOutputCollector collector) {
-
-     /*
-    ----------------------TODO-----------------------
-    Task: initialize the file reader
-
-
-    ------------------------------------------------- */
-
+    this.reader = getReader();
     this.context = context;
     this._collector = collector;
   }
 
+  private BufferedReader getReader() {
+    try {
+      return new BufferedReader(new FileReader(filename));
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @Override
   public void nextTuple() {
-
-     /*
-    ----------------------TODO-----------------------
-    Task:
-    1. read the next line and emit a tuple for it
-    2. don't forget to sleep when the file is entirely read to prevent a busy-loop
-
-    ------------------------------------------------- */
-
-
+    try {
+      String line = reader.readLine();
+      if (line == null) {
+        Utils.sleep(2 * 60 * 1000);
+      } else {
+        _collector.emit(new Values(line));
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -55,13 +68,11 @@ public class FileReaderSpout implements IRichSpout {
 
   @Override
   public void close() {
-   /*
-    ----------------------TODO-----------------------
-    Task: close the file
-
-
-    ------------------------------------------------- */
-
+    try {
+      reader.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 
